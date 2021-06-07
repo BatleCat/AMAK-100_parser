@@ -10,8 +10,9 @@
 //#  Comments:
 //#
 //##
+//include <udp.npl>
 
-[ RegisterAfter (UDP.http, AMAK_100) ]
+[ RegisterAfter (UDP.UDPPayload, AMAK_100) ]
 Protocol AMAK_100 = FormatString( "AMAK_Id = %s",
                      			 AsciiString(FrameData, Offset, 4) 
 								)
