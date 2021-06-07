@@ -1,0 +1,23 @@
+//#  ** Public Protocol Parser **
+//#  (c) 2021 TNG-GROUP
+//#
+//#  Title: AMAK-100
+//#
+//#  Details: 
+//#
+//#  References: 
+//#
+//#  Comments:
+//#
+//##
+
+[ RegisterAfter (UDP.http, AMAK_100) ]
+Protocol AMAK_100 = FormatString( "AMAK_Id = %s",
+                     			 AsciiString(FrameData, Offset, 4) 
+								)
+
+{
+	AsciiString(4) AmakId;
+
+}
+
