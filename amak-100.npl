@@ -12,7 +12,7 @@
 //##
 //include <udp.npl>
 
-[ RegisterAfter (UDP.UDPPayload, AMAK_100) ]
+[ RegisterAfter (ipv4.Udp, AMAK_100) ]
 Protocol AMAK_100 = FormatString( "AMAK_Id = %s",
                      			 AsciiString(FrameData, Offset, 4) 
 								)
