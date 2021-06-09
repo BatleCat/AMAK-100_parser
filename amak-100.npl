@@ -10,15 +10,53 @@
 //#  Comments:
 //#
 //##
-//include <udp.npl>
 
-[ RegisterAfter (ipv4.Udp, AMAK_100) ]
-Protocol AMAK_100 = FormatString( "AMAK_Id = %s",
-                     			 AsciiString(FrameData, Offset, 4) 
+[ RegisterAfter (UDPPayload.http, AMAK, 48888 | 48889) ]
+Protocol AMAK_100 = FormatString( "AMAK_Id = %s | Cmd = %s",
+								  AmakId,
+								  AmakCmdOpcodeTable(AmakCmd)
 								)
 
 {
-	AsciiString(4) AmakId;
+    [ ByteOrder = 0 ]   				// Little-endian byte order.
+//    [ ByteOrder = 1 ]   				// Big-endian byte order.
 
+	AsciiString(8) 	AmakId;
+	AsciiString(16)	AmakName;
+
+	INT32			  AmakSerial;
+	CHAR 			  AmakDirection;
+	CHAR			   AmakCmd;
+	UINT16			 AmakCmdCount;
+	UINT16			 AmakDataLength;
+	UINT16			 AmakFragmentId;
+	UINT16			 AmakFragmentLength;
 }
 
+Table AmakCmdOpcodeTable
+{
+   switch(value)
+   {
+      case 0x00 : "Reset";
+      case 0x01 : "Get State";
+      case 0x02 : "Get Settings";
+	  case 0x03 : "Get Calibrates";
+	  case 0x04 : "Get Base Channels";
+	  case 0x05 : "Get Startups";
+	  case 0x06 : "Get Comman";
+	  case 0x07 : "Set Net";
+	  case 0x08 : "Set Work";
+	  case 0x09 : "Set RS-485";
+	  case 0x0A : "Set From File";
+	  case 0x0B : "Stop";
+	  case 0x0C : "Set Calibrates";
+	  case 0x0D : "Set Time";
+	  case 0x0E : "Read Block";
+	  case 0x0F : "Write Block";
+	  case 0x10 : "Reset SD";
+	  case 0x11 : "Reset EEPROM";
+	  case 0x12 : "Reset Startups";
+	  case 0x13 : "Get Data";
+      default : "Unknown Code";
+   }
+}
