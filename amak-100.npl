@@ -1,3 +1,4 @@
+//-----------------------------------------------------------------------------
 //#  ** Public Protocol Parser **
 //#  (c) 2021 TNG-GROUP
 //#
@@ -10,11 +11,13 @@
 //#  Comments:
 //#
 //##
-
+//-----------------------------------------------------------------------------
 [ RegisterAfter (UDPPayload.http, AMAK, 48888 | 48889) ]
-Protocol AMAK_100 = FormatString( "AMAK_Id = %s | Cmd = %s",
+//-----------------------------------------------------------------------------
+Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
 								  AmakId,
-								  AmakCmdOpcodeTable(AmakCmd)
+								  AmakCmdOpcodeTable(AmakCmd),
+								  AmakDirectionTable(AmakDirection)
 								)
 
 {
@@ -31,8 +34,21 @@ Protocol AMAK_100 = FormatString( "AMAK_Id = %s | Cmd = %s",
 	UINT16			 AmakDataLength;
 	UINT16			 AmakFragmentId;
 	UINT16			 AmakFragmentLength;
-}
 
+	switch AmakDirection
+	{
+//		case 0 : 
+		case 1 :
+				switch AmakCmd
+				{
+					case 0x01 : TAmak_State      AmakState;
+					case 0x02 : TAmak_Settings   AmakSettings;
+					case 0x03 : TAmak_Calibrates Amak_Calibrates;
+					case 0x04 : TAmak_Channel    Amak_Channel;
+				}
+	}
+}
+//-----------------------------------------------------------------------------
 Table AmakCmdOpcodeTable
 {
    switch(value)
@@ -60,3 +76,215 @@ Table AmakCmdOpcodeTable
       default : "Unknown Code";
    }
 }
+//-----------------------------------------------------------------------------
+Table AmakDirectionTable
+{
+   switch(value)
+   {
+		case 0 : "PC -> AMAK";
+		case 1 : "AMAk -> PC";
+   }
+}
+//-----------------------------------------------------------------------------
+struct BCD = FormatString("%d%d", hi, lo)
+{
+	uint8 lo:4 = FormatString("%d", this);
+	uint8 hi:4 = FormatString("%d", this);
+}
+//-----------------------------------------------------------------------------
+struct TAMAK_RTC = FormatString(" %s/%s/%s  %s:%s:%s",
+								day.toString, month.toString, year.toString,
+								hour.toString, minute.toString, second.toString
+								)
+{
+    BCD                  day;                //0x00yymmdd
+    BCD                  month;
+    BCD                  year;
+    uint8                  res1;
+    BCD                  second;             //0x00hhnnss
+    BCD                  minute;
+    BCD                  hour;
+    uint8                  res2;
+} //8 bytes
+//-----------------------------------------------------------------------------
+Table AmakModeTable
+{
+	switch (value)
+	{
+		case 0 : "Stop";
+		case 1 : "Wait";
+		case 2 : "Work";
+	}
+}
+//-----------------------------------------------------------------------------
+struct TAMAK_State_Sensors
+{
+    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    int32                  mode;               //  (0=stop, 1=wait, 2=work) -   Settings.Work
+    TAMAK_RTC              rtc;                //  
+    float                  axelX;              //   mG,     
+	float				  axelY;
+	float				  axelZ;
+    float                  temperature;        //   
+    float                  voltage;            // 
+}//32 bytes
+//-----------------------------------------------------------------------------
+struct TAMAK_State
+{
+    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    TAMAK_State_Sensors    sensors;
+    int32                  SD_block;
+    int32                  SD_offset;
+    int32                  SD_size;            // 
+    int32                  startup_count;
+    int32                  errors;             //   ,  RTC ,   .
+    int32                  pending;
+	[ ByteOrder = 1 ]
+    MacAddress             host_MAC;
+    IPv4Address            host_IP;
+} //66 bytes     GetState
+//-----------------------------------------------------------------------------
+struct TAMAK_Common_Settings
+{
+    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    AsciiString(8)          dll;                //Dll name AMAK
+    AsciiString(16)         name;               //tool name 
+    int32                   serial;             //tool serial 1
+    float                   diameter;
+    float                   length;
+    float                   weight;
+} //40 bytes
+//-----------------------------------------------------------------------------
+struct TAMAK_Net_Settings
+{
+	[ ByteOrder = 1 ]
+    MacAddress              MAC;
+    IPv4Address             IP;
+    IPv4Address             mask;
+	[ ByteOrder = 0 ]
+    int32                   DHCP;
+	[ ByteOrder = 1 ]
+    IPv4Address             DHCP_client_IP;
+} //22 bytes
+//-----------------------------------------------------------------------------
+struct TAMAK_Work_Settings
+{
+    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    int32                   mode;                               //  (0=stop, 1=wait, 2=work)
+    int32                   interval;                           //    (work)
+    TAMAK_RTC               alarm;                              //  (  wait  work)
+    int32                   wait_till_move;                     //1 ,     wait  work   
+    float                   move_threshold;                     //    
+    int32                   move_duration;                      //    
+    int32                   work_when_stay;                     //1 ,   -      
+    float                   stay_threshold;                     //    
+    int32                   stay_duration;                      //    
+    int32                   stay_check_interval;                //     
+    int32                   work_by_RS485;                      //  WorkBy...     . 1 - Interval, 2 - Stay
+} //52 bytes ?! 48!!!
+//-----------------------------------------------------------------------------
+struct TAMAK_RS485_Settings
+{
+    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    int32                   baud_rate;
+    char                    address;
+    char                    reply_length;
+} // 
+//-----------------------------------------------------------------------------
+struct TAMAK_Settings
+{
+    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    AsciiString(4)          mark;               // EEPROM=ADT
+    TAMAK_Common_Settings   common;
+    TAMAK_Net_Settings      net;
+    TAMAK_Work_Settings     work;
+    TAMAK_RS485_Settings    RS485;
+    int32                   version;            // 
+} //4+40+22+52+6=124 bytes    ?!  +4 ?!! 4 + 40 + 22 + 48 + 6 + 4 = 128 bytes !!!
+//-----------------------------------------------------------------------------
+struct TAMAK_Work_Mode
+{
+    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    char                    reg_params;         // 2     (0..3  4, 8, 16, 32 );
+                                                // 4    (0..8  10, 20, 50, 100, 200, 500, 1000, 1500, 2000);
+                                                // 2    (0..2   5,  10,  20 )
+    char                    charge_time;        //    
+                                                //(   2 ;   «100»    200 )
+    char                    delay_time;         //  (   4 )
+    char                    transmit_mode;      // :
+                                                //      0x10 -,
+                                                //      0x20 -,
+                                                //      0xCy -,   «y»    4-  -,
+                                                //                        , ,   ..
+    char                    transmit_polarity;  //    transmit_mode=0xCy;
+                                                //     .
+                                                //0  (+), 1  (-)
+    char                    reserved;           //   6 
+} //   
+//-----------------------------------------------------------------------------
+Table AmakTransmitMode
+{
+   switch(value)
+   {
+      // :
+      case 0x10 : "-";
+      case 0x20 : "-";
+	  case 0xCF : "-";
+	  case 0xCA : "--X";
+	  case 0xC5 : "--Y";
+//	  case 0xC? : "-";
+      //      0xCy -,   «y»    4-  -,
+      //                        , ,   ..
+	  default   : "";
+   }
+}
+//-----------------------------------------------------------------------------
+struct TAMAK_Calibrates
+{
+/*
+    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    //common 52 bytes
+    int32                   mark;                                   //EEPROM mark
+    char                    rtc_index;                              //    State
+    char                    temperature_index;                      //   -||-
+    int16(3)                axel_axis;                              //  .
+                                                                    //: axel_axis[0]=0x81 ,   X  (0)
+                                                                    //  Y 
+                                                                    //axel_axis[1]=0x02 ,   Y    Z 
+    float(2)                axel_linear;                            //      mG
+    float(2)                temperature_rtc_linear;                 //  Rtc  
+    float(2)                temperature_axel_linear;                //  Axel  
+    float(2)                temperature_internal_linear;            //       
+    float(2)                voltage_linear;                         //    
+    //amak 68 bytes ?! 69 bytes !!!
+    int16                   mode_count;                             //  
+    TAMAK_Work_Mode         modes[AMAK_CUSTOM_MAX_MODE_COUNT];      //  
+    char                    mode_ethernet;                          //   ,       Ethernet
+    char                    service;                                // f    ,         ;
+                                                                    //         f          .
+                                                                    //      0xff
+    char                    block_mask;                             //   .     0xff
+    char                    comp_offset;                            //      (  Ramtools)
+    char                    read_rate;                              //       RS485:
+                                                                    //      0  3 /;
+                                                                    //      1  4 /.
+                                                                    //      1 (4 /)
+    char                    apply_shift;                            //      (  Ramtools)
+    char                    apply_mult;                             //      (  Ramtools)
+*/
+} //  - 52+69=121  ?!
+//-----------------------------------------------------------------------------
+struct TAMAK_Channel
+{
+    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    AsciiString(14)         name;
+    char                    type;                                   //   (char, int...) , ,  
+    char                    flags;                                  //, unsigned, hex, string
+    int16                   sub_channels;                           //, 6   1000 
+    int32                   length;                                 //  
+    int16                   measure_point;                          // 
+    float                   step;                                   // 
+    int16                   tsm_distance;                           // 
+    int16                   rec_distance;                           // 
+} //32 bytes
+//-----------------------------------------------------------------------------
