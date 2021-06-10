@@ -58,20 +58,20 @@ Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
 			{
 				case 1 : TAmak_Channel    Amak_Channel[22];
 			}
-      		case AMAK_CMD_CODE_GetStartups :
+		case AMAK_CMD_CODE_GetStartups :
 			switch AmakDirection
 			{
 				case 1 : TAmak_Startups    Amak_Startups;
 			}
-      		case AMAK_CMD_CODE_SetCommon     : TAMAK_Common_Settings Amak_Common_Settongs;
-	      	case AMAK_CMD_CODE_SetNet        : TAMAK_Net_Settings    Amak_Net_Settings;
-      		case AMAK_CMD_CODE_SetWrok       : TAMAK_Work_Settings   Amak_Work_Settings;
-      		case AMAK_CMD_CODE_SetRS485      : TAMAK_RS485_Settings  Amak_RS485_Settings;
-      		case AMAK_CMD_CODE_SetFromFile   : BLOB(512)             Amak_Set_From_File;
+		case AMAK_CMD_CODE_SetCommon     : TAMAK_Common_Settings Amak_Common_Settongs;
+    	case AMAK_CMD_CODE_SetNet        : TAMAK_Net_Settings    Amak_Net_Settings;
+		case AMAK_CMD_CODE_SetWrok       : TAMAK_Work_Settings   Amak_Work_Settings;
+		case AMAK_CMD_CODE_SetRS485      : TAMAK_RS485_Settings  Amak_RS485_Settings;
+		case AMAK_CMD_CODE_SetFromFile   : BLOB(512)             Amak_Set_From_File;
 //     		case AMAK_CMD_CODE_Stop          : ; //   
-      		case AMAK_CMD_CODE_SetCalibrates : BLOB(256) Amak_Calibrates_Data;
-      		case AMAK_CMD_CODE_SetTime       : TAMAK_RTC Amak_RTC;
-      		case AMAK_CMD_CODE_ReadBlock     :
+		case AMAK_CMD_CODE_SetCalibrates : BLOB(256) Amak_Calibrates_Data;
+		case AMAK_CMD_CODE_SetTime       : TAMAK_RTC Amak_RTC;
+		case AMAK_CMD_CODE_ReadBlock     :
 			struct TAmak_Read_Block
 			{
 				int32 block_num;
@@ -91,7 +91,7 @@ Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
 						}
 				}
 			}
-      		case AMAK_CMD_CODE_WriteBlock    : 
+		case AMAK_CMD_CODE_WriteBlock    : 
 			struct TAMAK_Write_Block
 			{
 				int32 block_num;
@@ -100,7 +100,7 @@ Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
 //     		case AMAK_CMD_CODE_ResetSD       : ; //   
 //     		case AMAK_CMD_CODE_ResetEEPROM   : ; //   
 //     		case AMAK_CMD_CODE_ResetStartups : ; //   
-      		case AMAK_CMD_CODE_GetData       :
+		case AMAK_CMD_CODE_GetData       :
 			switch AmakDirection
 			{
 				case 0 : int32 frame_fragment_num;
