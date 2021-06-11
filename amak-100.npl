@@ -12,6 +12,27 @@
 //#
 //##
 //-----------------------------------------------------------------------------
+const AMAK_CMD_CODE_RESET             = 0x00;
+const AMAK_CMD_CODE_GetState          = 0x01;
+const AMAK_CMD_CODE_GetSettings       = 0x02;
+const AMAK_CMD_CODE_GetCalibrates     = 0x03;
+const AMAK_CMD_CODE_GetBaseChannels   = 0x04;
+const AMAK_CMD_CODE_GetStartups       = 0x05;
+const AMAK_CMD_CODE_SetCommon         = 0x06;
+const AMAK_CMD_CODE_SetNet            = 0x07;
+const AMAK_CMD_CODE_SetWrok           = 0x08;
+const AMAK_CMD_CODE_SetRS485          = 0x09;
+const AMAK_CMD_CODE_SetFromFile       = 0x0A;
+const AMAK_CMD_CODE_Stop              = 0x0B;
+const AMAK_CMD_CODE_SetCalibrates     = 0x0C;
+const AMAK_CMD_CODE_SetTime           = 0x0D;
+const AMAK_CMD_CODE_ReadBlock         = 0x0E;
+const AMAK_CMD_CODE_WriteBlock        = 0x0F;
+const AMAK_CMD_CODE_ResetSD           = 0x10;
+const AMAK_CMD_CODE_ResetEEPROM       = 0x11;
+const AMAK_CMD_CODE_ResetStartups     = 0x12;
+const AMAK_CMD_CODE_GetData           = 0x13;
+//-----------------------------------------------------------------------------
 [ RegisterAfter (UDPPayload.http, AMAK, 48888 | 48889) ]
 //-----------------------------------------------------------------------------
 Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
@@ -35,62 +56,153 @@ Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
 	UINT16			 AmakFragmentId;
 	UINT16			 AmakFragmentLength;
 
+	switch
+	{
+		case ( ( AmakCmd == AMAK_CMD_CODE_GetState ) && ( AmakDirection == 1 ) ):
+			TAmak_State AmakState;
+
+		case ( ( AmakCmd == AMAK_CMD_CODE_GetSettings ) && ( AmakDirection == 1 ) ):
+			TAmak_Settings AmakSettings;
+
+		case ( ( AmakCmd == AMAK_CMD_CODE_GetCalibrates ) && ( AmakDirection == 1 ) ):
+			TAmak_Calibrates Amak_Calibrates;
+
+		case ( ( AmakCmd == AMAK_CMD_CODE_GetBaseChannels ) && ( AmakDirection == 1 ) ):
+			TAmak_Channel Amak_Channel[22];
+
+		case ( ( AmakCmd == AMAK_CMD_CODE_GetStartups ) && ( AmakDirection == 1 ) ):
+			TAmak_Startups Amak_Startups;
+
+		case ( AmakCmd == AMAK_CMD_CODE_SetCommon ) : 
+			TAMAK_Common_Settings Amak_Common_Settongs;
+
+    	case ( AmakCmd == AMAK_CMD_CODE_SetNet ) : 
+			TAMAK_Net_Settings Amak_Net_Settings;
+
+		case ( AmakCmd == AMAK_CMD_CODE_SetWrok ) : 
+			TAMAK_Work_Settings Amak_Work_Settings;
+
+		case ( AmakCmd == AMAK_CMD_CODE_SetRS485 ) : 
+			TAMAK_RS485_Settings Amak_RS485_Settings;
+
+		case ( AmakCmd == AMAK_CMD_CODE_SetFromFile ) : 
+			BLOB(512) Amak_Set_From_File;
+
+//		case ( AmakCmd == AMAK_CMD_CODE_Stop ) : ; //   
+
+		case ( AmakCmd == AMAK_CMD_CODE_SetCalibrates ) : 
+			BLOB(256) Amak_Calibrates_Data;
+
+		case ( AmakCmd == AMAK_CMD_CODE_SetTime ) : 
+			TAMAK_RTC Amak_RTC;
+
+		case ( AmakCmd == AMAK_CMD_CODE_ReadBlock ) :
+			struct TAmak_Read_Block
+			{
+				int32 block_num;
+				int32 is_read_two_blocks;
+				switch
+				{
+					case ( ( AmakDirection == 1 ) && ( is_read_two_blocks == 0 ) ) :
+						BLOB(512) block1;
+
+					case ( ( AmakDirection == 1 ) && ( is_read_two_blocks == 1 ) ) :
+						struct TAMAK_Read_Two_Blocks
+						{
+							BLOB(512) block1;
+							BLOB(512) block2;
+						}
+				}
+			}
+
+		case ( AmakCmd == AMAK_CMD_CODE_WriteBlock ) : 
+			struct TAMAK_Write_Block
+			{
+				int32 block_num;
+				int32 data;
+			}
+//     		case AMAK_CMD_CODE_ResetSD       : ; //   
+//     		case AMAK_CMD_CODE_ResetEEPROM   : ; //   
+//     		case AMAK_CMD_CODE_ResetStartups : ; //   
+
+		case ( ( AmakCmd == AMAK_CMD_CODE_GetData ) && ( AmakDirection == 0 ) ) :
+			int32 frame_fragment_num;
+
+		case ( ( AmakCmd == AMAK_CMD_CODE_GetData ) && ( AmakDirection == 1 ) ) :
+			BLOB(1400) AMAK_Data;
+	}
+/*
 	switch (AmakCmd)
 	{
 //     		case AMAK_CMD_CODE_RESET    : ; //   
-		case 0x08: //AMAK_CMD_CODE_SetWrok       : 
-			TAMAK_Work_Settings   Amak_Work_Settings;
-		case AMAK_CMD_CODE_GetState : 
+
+		case AMAK_CMD_CODE_GetState:
+			switch
+			{
+				case ( AmakDirection == 1 ) : 
+					TAmak_State AmakState;
+
+			}
+
+		case AMAK_CMD_CODE_GetSettings:
 			switch (AmakDirection)
 			{
-				case 1 : TAmak_State      AmakState;
+				case 1: TAmak_Settings   AmakSettings;
 			}
-		case AMAK_CMD_CODE_GetSettings :
-			switch (AmakDirection)
-			{
-				case 1 : TAmak_Settings   AmakSettings;
-			}
+
 		case AMAK_CMD_CODE_GetCalibrates :
-			switch AmakDirection
+			switch (AmakDirection)
 			{
 				case 1 : TAmak_Calibrates Amak_Calibrates;
 			}
+
 		case AMAK_CMD_CODE_GetBaseChannels :
-			switch AmakDirection
+			switch (AmakDirection)
 			{
 				case 1 : TAmak_Channel    Amak_Channel[22];
 			}
+
 		case AMAK_CMD_CODE_GetStartups :
-			switch AmakDirection
+			switch (AmakDirection)
 			{
 				case 1 : TAmak_Startups    Amak_Startups;
 			}
+
 		case AMAK_CMD_CODE_SetCommon     : 
 			TAMAK_Common_Settings Amak_Common_Settongs;
+
     	case AMAK_CMD_CODE_SetNet        : 
 			TAMAK_Net_Settings    Amak_Net_Settings;
-//		case 0x08: //AMAK_CMD_CODE_SetWrok       : 
-//			TAMAK_Work_Settings   Amak_Work_Settings;
+
+		case AMAK_CMD_CODE_SetWrok  : 
+			TAMAK_Work_Settings   Amak_Work_Settings;
+
 		case AMAK_CMD_CODE_SetRS485      : 
 			TAMAK_RS485_Settings  Amak_RS485_Settings;
+
 		case AMAK_CMD_CODE_SetFromFile   : 
 			BLOB(512)             Amak_Set_From_File;
+
 //     		case AMAK_CMD_CODE_Stop          : ; //   
+
 		case AMAK_CMD_CODE_SetCalibrates : 
 			BLOB(256) Amak_Calibrates_Data;
+
 		case AMAK_CMD_CODE_SetTime       : 
 			TAMAK_RTC Amak_RTC;
+
 		case AMAK_CMD_CODE_ReadBlock     :
 			struct TAmak_Read_Block
 			{
 				int32 block_num;
 				int32 is_read_two_blocks;
-				switch AmakDirection
+				switch (AmakDirection)
 				{
 					case 1 : 
 						switch (is_read_two_blocks)
 						{
 							case 0: BLOB(512) block1;
+
 							case 1: 
 								struct TAMAK_Read_Two_Blocks
 								{
@@ -100,6 +212,7 @@ Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
 						}
 				}
 			}
+
 		case AMAK_CMD_CODE_WriteBlock    : 
 			struct TAMAK_Write_Block
 			{
@@ -109,13 +222,15 @@ Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
 //     		case AMAK_CMD_CODE_ResetSD       : ; //   
 //     		case AMAK_CMD_CODE_ResetEEPROM   : ; //   
 //     		case AMAK_CMD_CODE_ResetStartups : ; //   
+
 		case AMAK_CMD_CODE_GetData       :
-			switch AmakDirection
+			switch (AmakDirection)
 			{
 				case 0 : int32 frame_fragment_num;
 //				case 1 : 
 			}
 	}
+*/
 }
 //-----------------------------------------------------------------------------
 const AMAK_CUSTOM_WAVELEN             = 640;
@@ -132,27 +247,6 @@ const AMAK_CUSTOM_BASECHANNELCOUNT    = 22;
 //-----------------------------------------------------------------------------
 //  SD
 const AMAK_CUSTOM_SD_BLOCKCOUNT       = 81;
-//-----------------------------------------------------------------------------
-const AMAK_CMD_CODE_RESET             = 0x00;
-const AMAK_CMD_CODE_GetState          = 0x01;
-const AMAK_CMD_CODE_GetSettings       = 0x02;
-const AMAK_CMD_CODE_GetCalibrates     = 0x03;
-const AMAK_CMD_CODE_GetBaseChannels   = 0x04;
-const AMAK_CMD_CODE_GetStartups       = 0x05;
-const AMAK_CMD_CODE_SetCommon         = 0x06;
-const AMAK_CMD_CODE_SetNet            = 0x07;
-const AMAK_CMD_CODE_SetWrok           = 0x08;
-const AMAK_CMD_CODE_SetRS485          = 0x09;
-const AMAK_CMD_CODE_SetFromFile       = 0x0A;
-const AMAK_CMD_CODE_Stop              = 0x0B;
-const AMAK_CMD_CODE_SetCalibrates     = 0x0C;
-const AMAK_CMD_CODE_SetTime           = 0x0D;
-const AMAK_CMD_CODE_ReadBlock         = 0x0E;
-const AMAK_CMD_CODE_WriteBlock        = 0x0F;
-const AMAK_CMD_CODE_ResetSD           = 0x10;
-const AMAK_CMD_CODE_ResetEEPROM       = 0x11;
-const AMAK_CMD_CODE_ResetStartups     = 0x12;
-const AMAK_CMD_CODE_GetData           = 0x13;
 //-----------------------------------------------------------------------------
 Table AmakCmdOpcodeTable
 {
