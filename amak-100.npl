@@ -28,23 +28,25 @@ Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
 	AsciiString(16)	AmakName;
 
 	INT32			  AmakSerial;
-	CHAR 			  AmakDirection;
-	CHAR			   AmakCmd;
+	CHAR 			  AmakDirection = FormatString( "%s", AmakDirectionTable(this) );
+	CHAR			   AmakCmd       = FormatString( "%s", AmakCmdOpcodeTable(this) );
 	UINT16			 AmakCmdCount;
 	UINT16			 AmakDataLength;
 	UINT16			 AmakFragmentId;
 	UINT16			 AmakFragmentLength;
 
-	switch AmakCmd
+	switch (AmakCmd)
 	{
 //     		case AMAK_CMD_CODE_RESET    : ; //   
+		case 0x08: //AMAK_CMD_CODE_SetWrok       : 
+			TAMAK_Work_Settings   Amak_Work_Settings;
 		case AMAK_CMD_CODE_GetState : 
-			switch AmakDirection
+			switch (AmakDirection)
 			{
 				case 1 : TAmak_State      AmakState;
 			}
 		case AMAK_CMD_CODE_GetSettings :
-			switch AmakDirection
+			switch (AmakDirection)
 			{
 				case 1 : TAmak_Settings   AmakSettings;
 			}
@@ -63,14 +65,21 @@ Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
 			{
 				case 1 : TAmak_Startups    Amak_Startups;
 			}
-		case AMAK_CMD_CODE_SetCommon     : TAMAK_Common_Settings Amak_Common_Settongs;
-    	case AMAK_CMD_CODE_SetNet        : TAMAK_Net_Settings    Amak_Net_Settings;
-		case AMAK_CMD_CODE_SetWrok       : TAMAK_Work_Settings   Amak_Work_Settings;
-		case AMAK_CMD_CODE_SetRS485      : TAMAK_RS485_Settings  Amak_RS485_Settings;
-		case AMAK_CMD_CODE_SetFromFile   : BLOB(512)             Amak_Set_From_File;
+		case AMAK_CMD_CODE_SetCommon     : 
+			TAMAK_Common_Settings Amak_Common_Settongs;
+    	case AMAK_CMD_CODE_SetNet        : 
+			TAMAK_Net_Settings    Amak_Net_Settings;
+//		case 0x08: //AMAK_CMD_CODE_SetWrok       : 
+//			TAMAK_Work_Settings   Amak_Work_Settings;
+		case AMAK_CMD_CODE_SetRS485      : 
+			TAMAK_RS485_Settings  Amak_RS485_Settings;
+		case AMAK_CMD_CODE_SetFromFile   : 
+			BLOB(512)             Amak_Set_From_File;
 //     		case AMAK_CMD_CODE_Stop          : ; //   
-		case AMAK_CMD_CODE_SetCalibrates : BLOB(256) Amak_Calibrates_Data;
-		case AMAK_CMD_CODE_SetTime       : TAMAK_RTC Amak_RTC;
+		case AMAK_CMD_CODE_SetCalibrates : 
+			BLOB(256) Amak_Calibrates_Data;
+		case AMAK_CMD_CODE_SetTime       : 
+			TAMAK_RTC Amak_RTC;
 		case AMAK_CMD_CODE_ReadBlock     :
 			struct TAmak_Read_Block
 			{
@@ -196,11 +205,11 @@ struct TAMAK_RTC = FormatString(" %s/%s/%s  %s:%s:%s",
     BCD                  day;                //0x00yymmdd
     BCD                  month;
     BCD                  year;
-    uint8                  res1;
+    uint8                res1;
     BCD                  second;             //0x00hhnnss
     BCD                  minute;
     BCD                  hour;
-    uint8                  res2;
+    uint8                res2;
 } //8 bytes
 //-----------------------------------------------------------------------------
 Table AmakModeTable
@@ -216,13 +225,13 @@ Table AmakModeTable
 struct TAMAK_State_Sensors
 {
     [ ByteOrder = 0 ]   				// Little-endian byte order.
-    int32                  mode;               //  (0=stop, 1=wait, 2=work) -   Settings.Work
+    int32                  mode = FormatString( "%s", AmakModeTable(this) );               //  (0=stop, 1=wait, 2=work) -   Settings.Work
     TAMAK_RTC              rtc;                //  
-    float                  axelX;              //   mG,     
-	float				  axelY;
-	float				  axelZ;
-    float                  temperature;        //   
-    float                  voltage;            // 
+    float                  axelX = FormatString( "%3.3f mG", this );
+	float				  axelY = FormatString( "%3.3f mG", this );
+	float				  axelZ = FormatString( "%3.3f mG", this );
+    float                  temperature = FormatString( "%3.3f grad", this );
+    float                  voltage = FormatString( "%2.3f V", this );
 }//32 bytes
 //-----------------------------------------------------------------------------
 struct TAMAK_State
@@ -231,7 +240,7 @@ struct TAMAK_State
     TAMAK_State_Sensors    sensors;
     int32                  SD_block;
     int32                  SD_offset;
-    int32                  SD_size;            // 
+    int32                  SD_size;
     int32                  startup_count;
     int32                  errors;
     int32                  pending;
@@ -273,7 +282,7 @@ struct TAMAK_Net_Settings
 struct TAMAK_Work_Settings
 {
     [ ByteOrder = 0 ]   				// Little-endian byte order.
-    int32                   mode;                               //  (0=stop, 1=wait, 2=work)
+    int32                   mode = FormatString( "%s", AmakModeTable(this) );
     int32                   interval;                           //    (work)
     TAMAK_RTC               alarm;                              //  (  wait  work)
     int32                   wait_till_move;                     //1 ,     wait  work   
