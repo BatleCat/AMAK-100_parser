@@ -131,106 +131,6 @@ Protocol AMAK_100 = FormatString( "%s | Cmd = %s | %s",
 		case ( ( AmakCmd == AMAK_CMD_CODE_GetData ) && ( AmakDirection == 1 ) ) :
 			BLOB(1400) AMAK_Data;
 	}
-/*
-	switch (AmakCmd)
-	{
-//     		case AMAK_CMD_CODE_RESET    : ; //   
-
-		case AMAK_CMD_CODE_GetState:
-			switch
-			{
-				case ( AmakDirection == 1 ) : 
-					TAmak_State AmakState;
-
-			}
-
-		case AMAK_CMD_CODE_GetSettings:
-			switch (AmakDirection)
-			{
-				case 1: TAmak_Settings   AmakSettings;
-			}
-
-		case AMAK_CMD_CODE_GetCalibrates :
-			switch (AmakDirection)
-			{
-				case 1 : TAmak_Calibrates Amak_Calibrates;
-			}
-
-		case AMAK_CMD_CODE_GetBaseChannels :
-			switch (AmakDirection)
-			{
-				case 1 : TAmak_Channel    Amak_Channel[22];
-			}
-
-		case AMAK_CMD_CODE_GetStartups :
-			switch (AmakDirection)
-			{
-				case 1 : TAmak_Startups    Amak_Startups;
-			}
-
-		case AMAK_CMD_CODE_SetCommon     : 
-			TAMAK_Common_Settings Amak_Common_Settongs;
-
-    	case AMAK_CMD_CODE_SetNet        : 
-			TAMAK_Net_Settings    Amak_Net_Settings;
-
-		case AMAK_CMD_CODE_SetWrok  : 
-			TAMAK_Work_Settings   Amak_Work_Settings;
-
-		case AMAK_CMD_CODE_SetRS485      : 
-			TAMAK_RS485_Settings  Amak_RS485_Settings;
-
-		case AMAK_CMD_CODE_SetFromFile   : 
-			BLOB(512)             Amak_Set_From_File;
-
-//     		case AMAK_CMD_CODE_Stop          : ; //   
-
-		case AMAK_CMD_CODE_SetCalibrates : 
-			BLOB(256) Amak_Calibrates_Data;
-
-		case AMAK_CMD_CODE_SetTime       : 
-			TAMAK_RTC Amak_RTC;
-
-		case AMAK_CMD_CODE_ReadBlock     :
-			struct TAmak_Read_Block
-			{
-				int32 block_num;
-				int32 is_read_two_blocks;
-				switch (AmakDirection)
-				{
-					case 1 : 
-						switch (is_read_two_blocks)
-						{
-							case 0: BLOB(512) block1;
-
-							case 1: 
-								struct TAMAK_Read_Two_Blocks
-								{
-									BLOB(512) block1;
-									BLOB(512) block2;
-								}
-						}
-				}
-			}
-
-		case AMAK_CMD_CODE_WriteBlock    : 
-			struct TAMAK_Write_Block
-			{
-				int32 block_num;
-				int32 data;
-			}
-//     		case AMAK_CMD_CODE_ResetSD       : ; //   
-//     		case AMAK_CMD_CODE_ResetEEPROM   : ; //   
-//     		case AMAK_CMD_CODE_ResetStartups : ; //   
-
-		case AMAK_CMD_CODE_GetData       :
-			switch (AmakDirection)
-			{
-				case 0 : int32 frame_fragment_num;
-//				case 1 : 
-			}
-	}
-*/
 }
 //-----------------------------------------------------------------------------
 const AMAK_CUSTOM_WAVELEN             = 640;
@@ -318,19 +218,19 @@ Table AmakModeTable
 //-----------------------------------------------------------------------------
 struct TAMAK_State_Sensors
 {
-    [ ByteOrder = 0 ]   				// Little-endian byte order.
-    int32                  mode = FormatString( "%s", AmakModeTable(this) );               //  (0=stop, 1=wait, 2=work) -   Settings.Work
-    TAMAK_RTC              rtc;                //  
+    [ ByteOrder = 0 ]                                                           // Little-endian byte order.
+    int32                  mode = FormatString( "%s", AmakModeTable(this) );    //  (0=stop, 1=wait, 2=work) -   Settings.Work
+    TAMAK_RTC              rtc;
     float                  axelX = FormatString( "%3.3f mG", this );
-	float				  axelY = FormatString( "%3.3f mG", this );
-	float				  axelZ = FormatString( "%3.3f mG", this );
+    float 		   	  axelY = FormatString( "%3.3f mG", this );
+    float 		   	  axelZ = FormatString( "%3.3f mG", this );
     float                  temperature = FormatString( "%3.3f grad", this );
     float                  voltage = FormatString( "%2.3f V", this );
 }//32 bytes
 //-----------------------------------------------------------------------------
 struct TAMAK_State
 {
-    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    [ ByteOrder = 0 ]                                                           // Little-endian byte order.
     TAMAK_State_Sensors    sensors;
     int32                  SD_block;
     int32                  SD_offset;
@@ -345,17 +245,17 @@ struct TAMAK_State
 //-----------------------------------------------------------------------------
 struct TAMAK_Startups
 {
-    [ ByteOrder = 0 ]   				// Little-endian byte order.
+    [ ByteOrder = 0 ]                                                           // Little-endian byte order.
     int32                  StartupCount;
     TAMAK_State_Sensors    sensors[31];
 }
 //-----------------------------------------------------------------------------
 struct TAMAK_Common_Settings
 {
-    [ ByteOrder = 0 ]   				// Little-endian byte order.
-    AsciiString(8)          dll;                //Dll name AMAK
-    AsciiString(16)         name;               //tool name 
-    int32                   serial;             //tool serial 1
+    [ ByteOrder = 0 ]                                                           // Little-endian byte order.
+    AsciiString(8)          dll;                                                //Dll name AMAK
+    AsciiString(16)         name;                                               //tool name
+    int32                   serial;                                             //tool serial 1
     float                   diameter;
     float                   length;
     float                   weight;
@@ -363,30 +263,30 @@ struct TAMAK_Common_Settings
 //-----------------------------------------------------------------------------
 struct TAMAK_Net_Settings
 {
-	[ ByteOrder = 1 ]
+    [ ByteOrder = 1 ]                                                           // Big-endian byte order.
     MacAddress              MAC;
     IPv4Address             IP;
     IPv4Address             mask;
-	[ ByteOrder = 0 ]
+    [ ByteOrder = 0 ]                                                           // Little-endian byte order.
     int32                   DHCP;
-	[ ByteOrder = 1 ]
+    [ ByteOrder = 1 ]                                                           // Big-endian byte order.
     IPv4Address             DHCP_client_IP;
 } //22 bytes
 //-----------------------------------------------------------------------------
 struct TAMAK_Work_Settings
 {
-    [ ByteOrder = 0 ]   				// Little-endian byte order.
-    int32                   mode = FormatString( "%s", AmakModeTable(this) );
-    int32                   interval;                           //    (work)
-    TAMAK_RTC               alarm;                              //  (  wait  work)
-    int32                   wait_till_move;                     //1 ,     wait  work   
-    float                   move_threshold;                     //    
-    int32                   move_duration;                      //    
-    int32                   work_when_stay;                     //1 ,   -      
-    float                   stay_threshold;                     //    
-    int32                   stay_duration;                      //    
-    int32                   stay_check_interval;                //     
-    int32                   work_by_RS485;                      //  WorkBy...     . 1 - Interval, 2 - Stay
+    [ ByteOrder = 0 ]                                                           // Little-endian byte order.
+    int32                   mode = FormatString( "%s", AmakModeTable(this) );   // режим работы (0=stop, 1=wait, 2=work)
+    int32                   interval;                                           // интервал работы в секундах (work)
+    TAMAK_RTC               alarm;                                              // начало работы (переход из wait в work)
+    int32                   wait_till_move;                                     // 1 означает, что перед переходом из wait в work нужно дождаться движения
+    float                   move_threshold;                                     // порог акселерометров для определения движения
+    int32                   move_duration;                                      // столько секунд должен держаться порог
+    int32                   work_when_stay;                                     // 1 означает, что нужно что-то делать на стоянке – только СКПБ
+    float                   stay_threshold;                                     // порог акселерометров для определения стоянки
+    int32                   stay_duration;                                      // столько секунд должен держаться порог
+    int32                   stay_check_interval;                                // минимальный интервал проверки стоянки в секундах
+    int32                   work_by_RS485;                                      // запускать задание WorkBy... по команде старт от телесистемы. 1 - Interval, 2 - Stay
 } //52 bytes ?! 48!!!
 //-----------------------------------------------------------------------------
 struct TAMAK_RS485_Settings
@@ -415,12 +315,12 @@ struct TAMAK_Work_Mode
                                                 // 4    (0..8  10, 20, 50, 100, 200, 500, 1000, 1500, 2000);
                                                 // 2    (0..2   5,  10,  20 )
     char                    charge_time;        //    
-                                                //(   2 ;   �100�    200 )
+                                                //(   2 ;   «100»    200 )
     char                    delay_time;         //  (   4 )
     char                    transmit_mode;      // :
                                                 //      0x10 -,
                                                 //      0x20 -,
-                                                //      0xCy -,   �y�    4-  -,
+                                                //      0xCy -,   «y»    4-  -,
                                                 //                        , ,   ..
     char                    transmit_polarity;  //    transmit_mode=0xCy;
                                                 //     .
@@ -439,7 +339,7 @@ Table AmakTransmitMode
 	  case 0xCA : "--X";
 	  case 0xC5 : "--Y";
 //	  case 0xC? : "-";
-      //      0xCy -,   �y�    4-  -,
+      //      0xCy -,   «y»    4-  -,
       //                        , ,   ..
 	  default   : "";
    }
